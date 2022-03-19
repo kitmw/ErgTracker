@@ -3,42 +3,61 @@ package com.example.ergtracker.Model;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public class UserTest {
+
+    private User largeDataSetUser;
+    private User smallDataSetUser;
+    private User newUser;
 
     @Before
     public void setup(){
         System.out.println("Setting up dummy data...");
-        User largeDataSetUser = new User("TestUserBig");
-        largeDataSetUser.addDataPoint(80,500,new Date(1647000000000L));
-        largeDataSetUser.addDataPoint(89*2,1000,new Date(1647100000000L));
-        largeDataSetUser.addDataPoint(95*4,2000,new Date(1647200000000L));
-        largeDataSetUser.addDataPoint(1000,5000,new Date(1647300000000L));
-        largeDataSetUser.addDataPoint(105*20,20*500,new Date(1647600000000L));
-        largeDataSetUser.addDataPoint(89.5*2,1000,new Date(1647500000000L));
-        largeDataSetUser.addDataPoint(83,504,new Date(1647470000000L));
-        largeDataSetUser.addDataPoint(1100,4900,new Date(1648000000000L));
-        largeDataSetUser.addDataPoint(95.1*4,2001,new Date(1647900000000L));
-        largeDataSetUser.addDataPoint(89,500,new Date(1647800000000L));
+        largeDataSetUser = new User("TestUserBig");
+        largeDataSetUser.addDataPoint(80,500, LocalDateTime.of(2020,12,1,0,0));
+        largeDataSetUser.addDataPoint(89*2,1000, LocalDateTime.of(2020,11,1,0,0));
+        largeDataSetUser.addDataPoint(95*4,2000, LocalDateTime.of(2020,9,1,0,0));
+        largeDataSetUser.addDataPoint(1000,5000, LocalDateTime.of(2020,4,1,0,0));
+        largeDataSetUser.addDataPoint(105*20,20*500, LocalDateTime.of(2020,1,1,0,0));
+        largeDataSetUser.addDataPoint(89.5*2,1000, LocalDateTime.of(2020,1,1,0,0));
+        largeDataSetUser.addDataPoint(83,504, LocalDateTime.of(2020,2,1,0,0));
+        largeDataSetUser.addDataPoint(1100,4900, LocalDateTime.of(2020,5,1,0,0));
+        largeDataSetUser.addDataPoint(95.1*4,2001, LocalDateTime.of(2020,8,1,0,0));
+        largeDataSetUser.addDataPoint(89,500, LocalDateTime.of(2020,1,12,0,0));
 
-        User smallDataSetUser = new User("TestUserSmall");
-        smallDataSetUser.addDataPoint(80,500,new Date(1647000000000L));
-        smallDataSetUser.addDataPoint(89*2,1000,new Date(1647000000000L));
-        smallDataSetUser.addDataPoint(95*4,2000,new Date(1647000000000L));
+        smallDataSetUser = new User("TestUserSmall");
+        smallDataSetUser.addDataPoint(80,500, LocalDateTime.of(2021,1,1,0,0));
+        smallDataSetUser.addDataPoint(89*2,1000, LocalDateTime.of(2022,1,1,0,0));
+        smallDataSetUser.addDataPoint(95*4,2000, LocalDateTime.of(2020,1,1,0,0));
 
-        User newUser = new User("TestUserNew");
-        newUser.addDataPoint(80,500,new Date(1647000000000L));
+        newUser = new User("TestUserNew");
+        newUser.addDataPoint(80,500, LocalDateTime.of(2020,1,1,0,0));
 
 
     }
 
     @Test
-    public void estimateAll2KTimes() {
-//        largeDataSetUser.
+    public void estimateAll2KTimes_dateOrder() {
+        largeDataSetUser.estimateAll2KTimes();
+        List<DataPoint> largeDataList = largeDataSetUser.getUserData();
+        LocalDateTime previousDate = largeDataList.get(0).getDate();
+        for(DataPoint dataPoint : largeDataList.subList(1,largeDataList.size())){
+            if(dataPoint.getDate().isBefore(previousDate)){
+                fail("Datapoints in UserData are not in chronological order.");
+            }
+        }
+    }
+
+    @Test
+    public void estimateAll2KTimes_2KEstimate(){
+        largeDataSetUser.estimateAll2KTimes();
+        for(DataPoint dataPoint: largeDataSetUser.getUserData()){
+            System.out.println("Estimate for 2km time: " + dataPoint.getScaled2KEstimate() + "s");
+        }
     }
 
     @Test

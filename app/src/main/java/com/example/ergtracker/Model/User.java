@@ -1,12 +1,12 @@
 package com.example.ergtracker.Model;
 
-import android.service.autofill.UserData;
-
 import androidx.databinding.ObservableArrayList;
 import androidx.databinding.ObservableList;
 
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
+import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 public class User {
@@ -34,12 +34,15 @@ public class User {
         if(userData.size()<2){
             return;
         } else if(userData.size()<windowSize){
-            // use an all time logPD curve
+            // use an all time logTD curve
             estimateSubList2KTimes(userData);
             return;
         } else {
-            // treat data as rolling window size 5 so that logPD curve adjusts for user's change over time
-            for(int i=0;i<userData.size()-(windowSize);i++){
+            // treat data as rolling window size 5 so that logTD curve adjusts for user's change over time
+            // Windows overlap and so the latter 4 elements will be overwritten by more up to date
+            // estimates, unless the window is the last in the list in which case all elements will
+            // estimated from the same logTD fit.
+            for(int i=0;i<=(userData.size()-(windowSize));i++){
                 estimateSubList2KTimes(userData.subList(i,i+windowSize));
             }
         }
@@ -47,11 +50,31 @@ public class User {
 
     // subList is a list of minimum 2, maximum 5 elements used to calculate a local DTGradient and
     // so an estimate for 2km time that was relevant at that time
-    private void estimateSubList2KTimes(List subList){
+    private double estimateSubList2KTimes(List<DataPoint> subList){
+        double[][] logData = new double[subList.size()][2];
+        // for the purpose of estimating a time for a distance, it would be convenient if time on y axis, distance on x
+        int distanceColIndex = 0;
+        int timeColIndex = 1;
+        for (int i=0; i<subList.size(); i++){
+            logData[i][distanceColIndex] = Math.log10(subList.get(i).getRawDistance());
+            logData[i][timeColIndex] = Math.log10(subList.get(i).getRawTime());
+        }
+        SimpleRegression logRegress = new SimpleRegression(true);
+        logRegress.addData(logData);
+        logRegress.regress();
+        double predictedLog2KTime = logRegress.predict(Math.log10(2000));
 
+        for(DataPoint dataPoint:subList){
+            double predictedLogTimeForActualDistance = logRegress.predict(Math.log10(dataPoint.getRawDistance()));
+            double dataPointLogScaleFactor = predictedLog2KTime/predictedLogTimeForActualDistance;
+            double logTimeForActualDistanceScaledTo2K = Math.log10(dataPoint.getRawTime())*dataPointLogScaleFactor;
+            dataPoint.setScaled2KEstimate(Math.pow(10,logTimeForActualDistanceScaledTo2K));
+            dataPoint.setPredicted2KEstimate(Math.pow(10,predictedLog2KTime));
+        }
+        return logRegress.getRSquare();
     }
 
-//    private LinkedList<DataPoint> sortDataPoints(Date date, List<DataPoint> listOfDataPoints){
+//    private LinkedList<DataPoint> sortDataPoints(LocalDateTime date, List<DataPoint> listOfDataPoints){
 //        DataPoint earliestDataPoint = listOfDataPoints.get(0);
 //        if (date==null){
 //            for(DataPoint dataPoint:listOfDataPoints.subList(1,listOfDataPoints.size())){
@@ -60,7 +83,7 @@ public class User {
 //        }
 //    }
 
-    public void addDataPoint(double time, double distance, Date date){
+    public void addDataPoint(double time, double distance, LocalDateTime date){
         userData.add(new DataPoint(time,distance,date));
     }
 
@@ -69,5 +92,21 @@ public class User {
     }
     public double estimateTimeForDistance(){
         return 0.0;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ObservableList<DataPoint> getUserData() {
+        return userData;
+    }
+
+    public void setUserData(ObservableList<DataPoint> userData) {
+        this.userData = userData;
     }
 }
