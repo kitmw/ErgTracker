@@ -50,7 +50,7 @@ public class User {
 
     // subList is a list of minimum 2, maximum 5 elements used to calculate a local DTGradient and
     // so an estimate for 2km time that was relevant at that time
-    private double estimateSubList2KTimes(List<DataPoint> subList){
+    private void estimateSubList2KTimes(List<DataPoint> subList){
         double[][] logData = new double[subList.size()][2];
         // for the purpose of estimating a time for a distance, it would be convenient if time on y axis, distance on x
         int distanceColIndex = 0;
@@ -68,30 +68,47 @@ public class User {
             double predictedLogTimeForActualDistance = logRegress.predict(Math.log10(dataPoint.getRawDistance()));
             double dataPointLogScaleFactor = predictedLog2KTime/predictedLogTimeForActualDistance;
             double logTimeForActualDistanceScaledTo2K = Math.log10(dataPoint.getRawTime())*dataPointLogScaleFactor;
-            dataPoint.setScaled2KEstimate(Math.pow(10,logTimeForActualDistanceScaledTo2K));
-            dataPoint.setPredicted2KEstimate(Math.pow(10,predictedLog2KTime));
+            dataPoint.setScaled2KTime(Math.pow(10,logTimeForActualDistanceScaledTo2K));
+            dataPoint.setPredicted2KTime(Math.pow(10,predictedLog2KTime));
+            dataPoint.setLogRegress(logRegress);
         }
-        return logRegress.getRSquare();
     }
-
-//    private LinkedList<DataPoint> sortDataPoints(LocalDateTime date, List<DataPoint> listOfDataPoints){
-//        DataPoint earliestDataPoint = listOfDataPoints.get(0);
-//        if (date==null){
-//            for(DataPoint dataPoint:listOfDataPoints.subList(1,listOfDataPoints.size())){
-//
-//            }
-//        }
-//    }
 
     public void addDataPoint(double time, double distance, LocalDateTime date){
-        userData.add(new DataPoint(time,distance,date));
+        userData.add(new DataPoint(time,distance,date,this.name));
     }
 
-    public double estimateDistanceForTime(){
-        return 0.0;
-    }
-    public double estimateTimeForDistance(){
-        return 0.0;
+    public double estimateDForTOrTForD(double estVar, String estOption) throws Exception {
+        if (!estOption.equals("DForT") && !estOption.equals("TForD")) {
+            throw new IllegalArgumentException("Select either DForT (distance for a given time) or TForD (time for a given distance)");
+        }
+        if(userData==null){
+            throw new UserDataException("A minimum of two erg scores at different distances are required to make a prediction.");
+        } else if(userData.size()<2) {
+            throw new UserDataException("A minimum of two erg scores at different distances are required to make a prediction.");
+        } else {
+            Collections.sort(userData); // ensure dataPoints are in chronological order
+            DataPoint mostRecentData = userData.get(userData.size()-1);
+            if(mostRecentData.getPredicted2KTime()==0){
+                this.estimateAll2KTimes(); // predicted time set to default so call estimate method
+            }
+            SimpleRegression mostRecentLogTvD = mostRecentData.getLogRegress();
+            double logSlope = mostRecentLogTvD.getSlope();
+            double logIntercept = mostRecentLogTvD.getIntercept();
+            if(Double.isNaN(logSlope) || Double.isNaN(logIntercept) || logSlope<=0){
+                // still a problem with predictions so throw exception
+                throw new UserDataException("Unable to make an estimate with provided data.");
+            } else {
+                switch(estOption){
+                    case "TForD": // estVar is a distance so this is the simpler case as regression is Time vs Distance
+                        return Math.pow(10,mostRecentLogTvD.predict(Math.log10(estVar)));
+                    case "DForT": // estVat is a time so need to invert linear regression to get a distance for a given time
+                        double logD = (Math.log10(estVar)-logIntercept)/logSlope;
+                        return Math.pow(10,logD);
+                }
+            }
+        }
+        return 0;
     }
 
     public String getName() {
@@ -100,6 +117,11 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+        if (userData!=null && userData.size()>0){
+            for(DataPoint dataPoint : userData){
+                dataPoint.setUserName(name);
+            }
+        }
     }
 
     public ObservableList<DataPoint> getUserData() {

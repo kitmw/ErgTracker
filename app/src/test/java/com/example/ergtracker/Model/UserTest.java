@@ -55,16 +55,30 @@ public class UserTest {
     @Test
     public void estimateAll2KTimes_2KEstimate(){
         largeDataSetUser.estimateAll2KTimes();
-        for(DataPoint dataPoint: largeDataSetUser.getUserData()){
-            System.out.println("Estimate for 2km time: " + dataPoint.getScaled2KEstimate() + "s");
+        for(DataPoint dataPoint : largeDataSetUser.getUserData()){
+            System.out.println("Estimate for 2km time: " + dataPoint.getScaled2KTime() + "s");
+            // FIX THIS
+            // currently no test here
+            // to test this need to generate dummy data from a known curve and check that the 2K Estimate is correct
+            fail("No test here yet");
         }
     }
 
     @Test
-    public void estimateDistanceForTime() {
+    public void estimateDForTOrTForD() {
+        largeDataSetUser.estimateAll2KTimes();
+        try {
+            System.out.println("Estimated 1000m time is: " + largeDataSetUser.estimateDForTOrTForD(1000, "TForD") + "s");
+            System.out.println("Estimated 30 minute distance is: " + largeDataSetUser.estimateDForTOrTForD(30*60, "DForT") + "m");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Threw unexpected exception");
+        }
+        DataPoint dataPoint = largeDataSetUser.getUserData().get(largeDataSetUser.getUserData().size()-1);
+        // FIX THIS
+        // currently no test here
+        // to test this need to generate dummy data from a known curve and check that the estimates are correct
+        fail("No test here yet");
     }
 
-    @Test
-    public void estimateTimeForDistance() {
-    }
 }
