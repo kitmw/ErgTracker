@@ -60,8 +60,8 @@ public class UserTest {
             // FIX THIS
             // currently no test here
             // to test this need to generate dummy data from a known curve and check that the 2K Estimate is correct
-            fail("No test here yet");
         }
+        fail("No test here yet");
     }
 
     @Test
