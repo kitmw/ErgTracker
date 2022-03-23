@@ -12,6 +12,10 @@ import android.view.View;
 import com.example.ergtracker.Model.ModelRepository;
 import com.example.ergtracker.Model.RawDataPoint;
 import com.example.ergtracker.Model.User;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
 
 import java.util.List;
 
@@ -59,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void readAllButtonClick(View view) {
+    public void readAllFromDB(View view) {
         ModelRepository modelRepository =  new ModelRepository(view.getContext());
         Observer<List<RawDataPoint>> listObserver = dataPoints -> {
             for(RawDataPoint dataPoint : dataPoints) {
@@ -68,6 +72,18 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         modelRepository.getTasks().observe(lifecycleOwner, listObserver);
+    }
+
+    public void addDataPoint(View view){
+        GraphView graph = findViewById(R.id.graph);
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<com.jjoe64.graphview.series.DataPoint>(new com.jjoe64.graphview.series.DataPoint[] {
+                new com.jjoe64.graphview.series.DataPoint(0, 1),
+                new com.jjoe64.graphview.series.DataPoint(1, 5),
+                new com.jjoe64.graphview.series.DataPoint(2, 3),
+                new com.jjoe64.graphview.series.DataPoint(3, 2),
+                new com.jjoe64.graphview.series.DataPoint(4, 6)
+        });
+        graph.addSeries(series);
     }
 
 }
