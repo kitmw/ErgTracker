@@ -8,16 +8,19 @@ import androidx.room.PrimaryKey;
 
 @Entity
 public class RawDataPoint {
-    @PrimaryKey(autoGenerate = false)
+    @PrimaryKey(autoGenerate = true)
     @NonNull
+    private int dataPointID = 0;
     private String userName;
     private double rawTime;
     private double rawDistance;
+    private String dateString;
 
-    public RawDataPoint(String userName, double rawTime, double rawDistance) {
+    public RawDataPoint(String userName, double rawTime, double rawDistance, String dateString) {
         this.userName = userName;
         this.rawTime = rawTime;
         this.rawDistance = rawDistance;
+        this.dateString = dateString;
     }
 
     public String getUserName() {
@@ -42,5 +45,21 @@ public class RawDataPoint {
 
     public void setRawDistance(double rawDistance) {
         this.rawDistance = rawDistance;
+    }
+
+    public int getDataPointID() {
+        return dataPointID;
+    }
+
+    public void setDataPointID(int dataPointID) {
+        this.dataPointID = dataPointID;
+    }
+
+    public String getDateString() {
+        return dateString;
+    }
+
+    public void setDateString(String dateString) {
+        this.dateString = dateString;
     }
 }

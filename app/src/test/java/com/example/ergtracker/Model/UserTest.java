@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,24 +19,24 @@ public class UserTest {
     public void setup(){
         System.out.println("Setting up dummy data...");
         largeDataSetUser = new User("TestUserBig");
-        largeDataSetUser.addDataPoint(80,500, LocalDateTime.of(2020,12,1,0,0));
-        largeDataSetUser.addDataPoint(89*2,1000, LocalDateTime.of(2020,11,1,0,0));
-        largeDataSetUser.addDataPoint(95*4,2000, LocalDateTime.of(2020,9,1,0,0));
-        largeDataSetUser.addDataPoint(1000,5000, LocalDateTime.of(2020,4,1,0,0));
-        largeDataSetUser.addDataPoint(105*20,20*500, LocalDateTime.of(2020,1,1,0,0));
-        largeDataSetUser.addDataPoint(89.5*2,1000, LocalDateTime.of(2020,1,1,0,0));
-        largeDataSetUser.addDataPoint(83,504, LocalDateTime.of(2020,2,1,0,0));
-        largeDataSetUser.addDataPoint(1100,4900, LocalDateTime.of(2020,5,1,0,0));
-        largeDataSetUser.addDataPoint(95.1*4,2001, LocalDateTime.of(2020,8,1,0,0));
-        largeDataSetUser.addDataPoint(89,500, LocalDateTime.of(2020,1,12,0,0));
+        largeDataSetUser.addDataPoint(80,500, LocalDate.of(2020,12,1));
+        largeDataSetUser.addDataPoint(89*2,1000, LocalDate.of(2020,11,1));
+        largeDataSetUser.addDataPoint(95*4,2000, LocalDate.of(2020,9,1));
+        largeDataSetUser.addDataPoint(1000,5000, LocalDate.of(2020,4,1));
+        largeDataSetUser.addDataPoint(105*20,20*500, LocalDate.of(2020,1,1));
+        largeDataSetUser.addDataPoint(89.5*2,1000, LocalDate.of(2020,1,1));
+        largeDataSetUser.addDataPoint(83,504, LocalDate.of(2020,2,1));
+        largeDataSetUser.addDataPoint(1100,4900, LocalDate.of(2020,5,1));
+        largeDataSetUser.addDataPoint(95.1*4,2001, LocalDate.of(2020,8,1));
+        largeDataSetUser.addDataPoint(89,500, LocalDate.of(2020,1,12));
 
         smallDataSetUser = new User("TestUserSmall");
-        smallDataSetUser.addDataPoint(80,500, LocalDateTime.of(2021,1,1,0,0));
-        smallDataSetUser.addDataPoint(89*2,1000, LocalDateTime.of(2022,1,1,0,0));
-        smallDataSetUser.addDataPoint(95*4,2000, LocalDateTime.of(2020,1,1,0,0));
+        smallDataSetUser.addDataPoint(80,500, LocalDate.of(2021,1,1));
+        smallDataSetUser.addDataPoint(89*2,1000, LocalDate.of(2022,1,1));
+        smallDataSetUser.addDataPoint(95*4,2000, LocalDate.of(2020,1,1));
 
         newUser = new User("TestUserNew");
-        newUser.addDataPoint(80,500, LocalDateTime.of(2020,1,1,0,0));
+        newUser.addDataPoint(80,500, LocalDate.of(2020,1,1));
 
 
     }
@@ -44,7 +45,7 @@ public class UserTest {
     public void estimateAll2KTimes_dateOrder() {
         largeDataSetUser.estimateAll2KTimes();
         List<DataPoint> largeDataList = largeDataSetUser.getUserData();
-        LocalDateTime previousDate = largeDataList.get(0).getDate();
+        LocalDate previousDate = largeDataList.get(0).getDate();
         for(DataPoint dataPoint : largeDataList.subList(1,largeDataList.size())){
             if(dataPoint.getDate().isBefore(previousDate)){
                 fail("Datapoints in UserData are not in chronological order.");

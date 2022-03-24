@@ -1,5 +1,14 @@
 <resources>
     <string name="app_name">Erg Tracker</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="OK">OK</string>
+    <string name="Cancel">Cancel</string>
+
+<!--    Add new score dialog-->
+    <string name="add_score_title">"New erg score"</string>
+
+<!--    Database interaction-->
+    <string name="read_problem">Couldn\'t read user: </string>
+    <string name="write_problem">Couldn\'t write user: </string>
+<!--    NB: date format is hard coded in RawDataPoint class to avoid passing UI elements (context) to base model class-->
+    <string name="date_format">yyyy-MM-dd</string>
 </resources>

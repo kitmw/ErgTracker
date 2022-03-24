@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/addDataButton"
+        android:icon="@android:drawable/ic_menu_add"
+        android:onClick="addDataPoint"
+        android:title="Add data" />
+    <item
+        android:id="@+id/deleteDataButton"
+        android:icon="@android:drawable/ic_delete"
+        android:title="Delete data" />
+    <item
+        android:id="@+id/changeUserButton"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:title="Change User" />
+
+</menu>

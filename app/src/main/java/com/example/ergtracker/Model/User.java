@@ -1,20 +1,25 @@
 package com.example.ergtracker.Model;
 
+import android.content.Context;
+
 import androidx.databinding.ObservableArrayList;
 import androidx.databinding.ObservableList;
 
+import com.example.ergtracker.R;
+
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
 public class User {
-    private String name;
+    private String userName;
     private ObservableList<DataPoint> userData;
 
-    public User(String name) {
-        this.name = name;
+    public User(String userName) {
+        this.userName = userName;
         this.userData = new ObservableArrayList<DataPoint>();
     }
 
@@ -74,8 +79,13 @@ public class User {
         }
     }
 
-    public void addDataPoint(double time, double distance, LocalDateTime date){
-        userData.add(new DataPoint(time,distance,date,this.name));
+    public void addDataPoint(double rawTime, double rawDistance, LocalDate date){
+        userData.add(new DataPoint(rawTime,rawDistance,date,this.userName));
+    }
+
+    public void addDataPoint(double rawTime, double rawDistance, String dateString){
+        LocalDate date = LocalDate.parse(dateString,DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        userData.add(new DataPoint(rawTime,rawDistance,date,this.userName));
     }
 
     public double estimateDForTOrTForD(double estVar, String estOption) throws Exception {
@@ -111,15 +121,15 @@ public class User {
         return 0;
     }
 
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUserName(String userName) {
+        this.userName = userName;
         if (userData!=null && userData.size()>0){
             for(DataPoint dataPoint : userData){
-                dataPoint.setUserName(name);
+                dataPoint.setUserName(userName);
             }
         }
     }

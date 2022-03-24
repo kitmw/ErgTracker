@@ -1,9 +1,11 @@
-package com.example.ergtracker.Model;
+package com.example.ergtracker.Model.Database;
 
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {RawDataPoint.class}, version = 1, exportSchema = false)
+import com.example.ergtracker.Model.RawDataPoint;
+
+@Database(entities = {RawDataPoint.class}, version = 3, exportSchema = false)
 public abstract class ModelDatabase extends RoomDatabase {
     public abstract DaoAccess daoAccess();
 }

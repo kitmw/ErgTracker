@@ -1,13 +1,18 @@
 package com.example.ergtracker.Model;
 
+import android.content.Context;
+
+import com.example.ergtracker.R;
+
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class DataPoint implements Comparable<DataPoint> {
     private RawDataPoint rawDataPoint;
     private SimpleRegression logRegress;
-    private LocalDateTime date;
+    private LocalDate date;
     // A scaled time is a raw time, scaled to the appropriate distance by the model. A predicted
     // time, is what the model thinks a user should be able to achieve based on recent data. They
     // differ because a user might under or over perform on a particular day.
@@ -16,8 +21,9 @@ public class DataPoint implements Comparable<DataPoint> {
 
 
 
-    public DataPoint(double rawTime, double rawDistance, LocalDateTime date,String userName) {
-        this.rawDataPoint = new RawDataPoint(userName,rawTime,rawDistance);
+    public DataPoint(double rawTime, double rawDistance, LocalDate date,String userName) {
+        String dateString = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        this.rawDataPoint = new RawDataPoint(userName,rawTime,rawDistance,dateString);
         this.scaled2KTime = 0; // can only make this estimate with knowledge of other data points
         this.predicted2KTime = 0;
         this.logRegress = new SimpleRegression();
@@ -48,11 +54,11 @@ public class DataPoint implements Comparable<DataPoint> {
         this.scaled2KTime = scaled2KTime;
     }
 
-    public LocalDateTime getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(LocalDateTime date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
@@ -85,11 +91,5 @@ public class DataPoint implements Comparable<DataPoint> {
         this.rawDataPoint.setUserName(userName);
     }
 
-    public RawDataPoint getRawDataPoint() {
-        return rawDataPoint;
-    }
 
-    public void setRawDataPoint(RawDataPoint rawDataPoint) {
-        this.rawDataPoint = rawDataPoint;
-    }
 }
