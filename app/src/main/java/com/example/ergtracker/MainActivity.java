@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         lifecycleOwner = this;
 
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
-        this.previousUserName = sharedPref.getString("userName",null);
+        this.previousUserName = sharedPref.getString("userName","Default user");
         // try to find user that matches in database, if not there make a new one
         this.userList = new ArrayList<>();
         readAllFromDB(findViewById(android.R.id.content).getRootView());
@@ -143,17 +143,19 @@ public class MainActivity extends AppCompatActivity {
 
         // Decide whether to offer user the option to input name
         final EditText nameText = (EditText) viewInflated.findViewById(R.id.name_field);
-        String previousUserName = sharedPref.getString("userName",null);
-        if(previousUserName!=null){
+        this.previousUserName = sharedPref.getString("userName","Default user");
+        if(!previousUserName.equals("Default user")){
             nameText.setText(previousUserName);
             nameText.setEnabled(false);
         }
+        User user = this.userList.stream().filter(previousUser ->
+                previousUser.getUserName().equals(previousUserName)).findFirst().orElse(new User(previousUserName));
+
         final EditText distanceText = (EditText) viewInflated.findViewById(R.id.distance_field);
         final EditText timeText = (EditText) viewInflated.findViewById(R.id.time_field);
         final EditText dateText = (EditText) viewInflated.findViewById(R.id.date_field);
         dateText.setText(LocalDate.now().format(DateTimeFormatter.ofPattern(getResources().getString(R.string.date_format))));
         builder.setView(viewInflated);
-        User user = this.userList.stream().filter(previousUser -> previousUser.getUserName().equals(previousUserName)).findFirst().orElse(null);
         builder.setPositiveButton(R.string.OK, (dialog, i) -> {
             // FIX THIS: add data validation here
             dialog.dismiss();
@@ -161,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
             editor.putString("userName",nameText.getText().toString());
             editor.apply();
             this.setTitle(nameText.getText().toString());
+            user.setUserName(nameText.getText().toString());
             user.addDataPoint(Double.parseDouble(timeText.getText().toString()),
                     Double.parseDouble(distanceText.getText().toString()),
                     dateText.getText().toString());
