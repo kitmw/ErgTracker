@@ -22,9 +22,12 @@ import com.example.ergtracker.Model.Database.ModelRepository;
 import com.example.ergtracker.Model.RawDataPoint;
 import com.example.ergtracker.Model.User;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -51,15 +54,6 @@ public class MainActivity extends AppCompatActivity {
         // try to find user that matches in database, if not there make a new one
         this.userList = new ArrayList<>();
         readAllFromDB(findViewById(android.R.id.content).getRootView());
-//        if(previousUserName!=null){
-//            readAllFromDB(findViewById(android.R.id.content).getRootView());
-//            User previousUser = this.userList.stream().filter(user -> user.getUserName().equals(previousUserName)).findFirst().orElse(null);
-//            if(previousUser!=null){
-//                this.user = previousUser;
-//            } else {
-//                this.user = new User(previousUserName);
-//            }
-//        }
     }
 
     public void writeUserToDB(View view, User user) {
@@ -124,13 +118,41 @@ public class MainActivity extends AppCompatActivity {
         if(user!=null) {
             user.estimateAll2KTimes();
             DataPoint[] graphDataArray = new DataPoint[user.getUserData().size()];
+            long earliestTimeSinceEpocSeconds = user.getUserData().get(0).getDate().atStartOfDay(ZoneId.of("GMT")).toEpochSecond();
+            long latestTimeSinceEpocSeconds = earliestTimeSinceEpocSeconds;
+            double minY = user.getUserData().get(0).getPredicted2KTime();
+            double maxY = minY;
             for (int i = 0; i < user.getUserData().size(); i++) {
                 com.example.ergtracker.Model.DataPoint ergDataPoint = user.getUserData().get(i);
                 long timeSinceEpocSeconds = ergDataPoint.getDate().atStartOfDay(ZoneId.of("GMT")).toEpochSecond();
-                graphDataArray[i] = new com.jjoe64.graphview.series.DataPoint(timeSinceEpocSeconds, ergDataPoint.getPredicted2KTime());
+                if(timeSinceEpocSeconds<earliestTimeSinceEpocSeconds){
+                    earliestTimeSinceEpocSeconds = timeSinceEpocSeconds;
+                } else if(timeSinceEpocSeconds>latestTimeSinceEpocSeconds){
+                    latestTimeSinceEpocSeconds = timeSinceEpocSeconds;
+                }
+                if(ergDataPoint.getPredicted2KTime()<minY){
+                    minY = ergDataPoint.getPredicted2KTime();
+                } else if(ergDataPoint.getPredicted2KTime()>maxY){
+                    maxY = ergDataPoint.getPredicted2KTime();
+                }
+                graphDataArray[i] = new com.jjoe64.graphview.series.DataPoint(1000*timeSinceEpocSeconds, ergDataPoint.getPredicted2KTime());
+            }
+            double yPadding = 0.1*(maxY-minY);
+            if(yPadding == 0){
+                yPadding = 1;
             }
             LineGraphSeries<com.jjoe64.graphview.series.DataPoint> series = new LineGraphSeries<>(graphDataArray);
             graph.addSeries(series);
+            graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(this, new SimpleDateFormat(getResources().getString(R.string.date_format))));
+            graph.getGridLabelRenderer().setNumHorizontalLabels(3);
+            graph.getGridLabelRenderer().setHorizontalLabelsAngle(45);
+            graph.getViewport().setMinX(1000*earliestTimeSinceEpocSeconds);
+            graph.getViewport().setMaxX(1000*latestTimeSinceEpocSeconds);
+            graph.getViewport().setXAxisBoundsManual(true);
+            graph.getViewport().setMinY(minY-yPadding);
+            graph.getViewport().setMaxY(maxY+yPadding);
+            graph.getViewport().setYAxisBoundsManual(true);
+//            graph.getGridLabelRenderer().setHumanRounding(false);
         }
     }
 
@@ -177,6 +199,6 @@ public class MainActivity extends AppCompatActivity {
         builder.setNegativeButton(R.string.Cancel, (dialog,i) -> dialog.cancel());
         builder.show();
         return true;
-    };
+    }
 
 }
