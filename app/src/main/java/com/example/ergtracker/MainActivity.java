@@ -22,6 +22,7 @@ import com.example.ergtracker.Model.Database.ModelRepository;
 import com.example.ergtracker.Model.RawDataPoint;
 import com.example.ergtracker.Model.User;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -39,7 +40,6 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     private LifecycleOwner lifecycleOwner;
-//    private User user;
     private List<User> userList;
     private String previousUserName;
 
@@ -130,28 +130,44 @@ public class MainActivity extends AppCompatActivity {
                 } else if(timeSinceEpocSeconds>latestTimeSinceEpocSeconds){
                     latestTimeSinceEpocSeconds = timeSinceEpocSeconds;
                 }
-                if(ergDataPoint.getPredicted2KTime()<minY){
-                    minY = ergDataPoint.getPredicted2KTime();
-                } else if(ergDataPoint.getPredicted2KTime()>maxY){
-                    maxY = ergDataPoint.getPredicted2KTime();
-                }
+//                if(ergDataPoint.getPredicted2KTime()<minY){
+//                    minY = ergDataPoint.getPredicted2KTime();
+//                } else if(ergDataPoint.getPredicted2KTime()>maxY){
+//                    maxY = ergDataPoint.getPredicted2KTime();
+//                }
                 graphDataArray[i] = new com.jjoe64.graphview.series.DataPoint(1000*timeSinceEpocSeconds, ergDataPoint.getPredicted2KTime());
             }
-            double yPadding = 0.1*(maxY-minY);
-            if(yPadding == 0){
-                yPadding = 1;
+            double timeSpanSeconds = latestTimeSinceEpocSeconds-earliestTimeSinceEpocSeconds;
+            String dateDisplayFormat = "MMM"; // default display months
+            if (timeSpanSeconds > 3153600) {
+                dateDisplayFormat = "MMM-YY"; // greater than a year
+            } else if(604800 < timeSpanSeconds && timeSpanSeconds < 2628002){
+                dateDisplayFormat = "EEE-dd"; // greater than a week, less than a month
+            } else if(timeSpanSeconds <= 604800){
+                dateDisplayFormat = "EEE";
             }
+
             LineGraphSeries<com.jjoe64.graphview.series.DataPoint> series = new LineGraphSeries<>(graphDataArray);
+            series.setDrawDataPoints(true);
             graph.addSeries(series);
-            graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(this, new SimpleDateFormat(getResources().getString(R.string.date_format))));
-            graph.getGridLabelRenderer().setNumHorizontalLabels(3);
-            graph.getGridLabelRenderer().setHorizontalLabelsAngle(45);
-            graph.getViewport().setMinX(1000*earliestTimeSinceEpocSeconds);
-            graph.getViewport().setMaxX(1000*latestTimeSinceEpocSeconds);
-            graph.getViewport().setXAxisBoundsManual(true);
-            graph.getViewport().setMinY(minY-yPadding);
-            graph.getViewport().setMaxY(maxY+yPadding);
-            graph.getViewport().setYAxisBoundsManual(true);
+            graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(this, new SimpleDateFormat(dateDisplayFormat)));
+            graph.getGridLabelRenderer().setHorizontalAxisTitle("Date");
+            graph.getGridLabelRenderer().setVerticalAxisTitle("Estimated 2k time / s");
+//            graph.getGridLabelRenderer().setNumHorizontalLabels(numLabels);
+//            graph.getViewport().setScalable(true);
+//            graph.getViewport().setScrollable(true);
+            graph.getGridLabelRenderer().setHorizontalLabelsAngle(135);
+//            graph.getGridLabelRenderer().setNumHorizontalLabels(4);
+//            graph.getGridLabelRenderer().setLabelHorizontalHeight(10);
+            graph.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
+//            graph.getViewport().setDrawBorder(true);
+//            graph.getGridLabelRenderer().setHighlightZeroLines(true);
+//            graph.getViewport().setMinX(1000*earliestTimeSinceEpocSeconds);
+//            graph.getViewport().setMaxX(1000*latestTimeSinceEpocSeconds);
+//            graph.getViewport().setXAxisBoundsManual(true);
+//            graph.getViewport().setMinY(minY-yPadding);
+//            graph.getViewport().setMaxY(maxY+yPadding);
+//            graph.getViewport().setYAxisBoundsManual(true);
 //            graph.getGridLabelRenderer().setHumanRounding(false);
         }
     }
