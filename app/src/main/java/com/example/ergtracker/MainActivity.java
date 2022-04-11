@@ -54,7 +54,10 @@ public class MainActivity extends AppCompatActivity {
         // try to find user that matches in database, if not there make a new one
         this.userList = new ArrayList<>();
         readAllFromDB(findViewById(android.R.id.content).getRootView());
+
     }
+
+
 
     public void writeUserToDB(View view, User user) {
         new Thread(() -> {
@@ -91,13 +94,25 @@ public class MainActivity extends AppCompatActivity {
             Observer<List<RawDataPoint>> listObserver = rawDataPointList -> {
                 Set<String> userNameSet = new HashSet<>(); // sets have no duplicates
                 rawDataPointList.forEach(rawDataPoint -> userNameSet.add(rawDataPoint.getUserName()));
+                // FIX THIS: adding duplicate users
                 userNameSet.forEach(userName -> this.userList.add(new User(userName)));
-                for (RawDataPoint rawDataPoint : rawDataPointList) {
+                for (RawDataPoint newRawDataPoint : rawDataPointList) {
                     // all users have already been added to user list outside for loop, identify which user to add to
-                    User thisUser = this.userList.stream().filter(user -> user.getUserName().equals(rawDataPoint.getUserName())).findFirst().orElse(null);
-                    LocalDate date = LocalDate.parse(rawDataPoint.getDateString(),DateTimeFormatter.ofPattern(getResources().getString(R.string.date_format)));
-                    thisUser.addDataPoint(rawDataPoint.getRawTime(),rawDataPoint.getRawDistance(),date);
-                    System.out.println(date + "data added to User: " + thisUser.getUserName());
+                    User thisUser = this.userList.stream().filter(user -> user.getUserName().equals(newRawDataPoint.getUserName())).findFirst().orElse(null);
+                    LocalDate date = LocalDate.parse(newRawDataPoint.getDateString(),DateTimeFormatter.ofPattern(getResources().getString(R.string.date_format)));
+                    boolean isDuplicate = false;
+                    for (com.example.ergtracker.Model.DataPoint existingUserDataPoint : thisUser.getUserData()){
+                        if (existingUserDataPoint.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")).equals(newRawDataPoint.getDateString())
+                                ||existingUserDataPoint.getRawTime()==newRawDataPoint.getRawTime()
+                                ||existingUserDataPoint.getRawDistance()==newRawDataPoint.getRawDistance()){
+                            isDuplicate = true;
+                        }
+                    }
+                    if(!isDuplicate) {
+                        thisUser.addDataPoint(newRawDataPoint.getRawTime(), newRawDataPoint.getRawDistance(), date);
+                    }
+                    thisUser.estimateAll2KTimes();
+                    System.out.println(date + " data added to User: " + thisUser.getUserName());
                 }
             };
             modelRepository.getTasks().observe(lifecycleOwner, listObserver);
@@ -110,11 +125,18 @@ public class MainActivity extends AppCompatActivity {
     public void deleteAllDBEntries(View view){
         ModelRepository modelRepository =  new ModelRepository(view.getContext());
         modelRepository.deleteAll();
+        userList.clear();
     }
 
     public void drawGraph(View view){
         GraphView graph = findViewById(R.id.graph);
-        User user = this.userList.stream().filter(previousUser -> previousUser.getUserName().equals(previousUserName)).findFirst().orElse(null);
+        readAllFromDB(view);
+        User user = this.userList.stream().filter(previousUser -> previousUser.getUserName().equals(previousUserName)).findFirst().orElse(new User(previousUserName));
+        //user.estimateAll2KTimes();
+        if(user.getUserData().size()<3){
+            graph.getSeries().clear();
+            return;
+        }
         if(user!=null) {
             user.estimateAll2KTimes();
             DataPoint[] graphDataArray = new DataPoint[user.getUserData().size()];
@@ -162,9 +184,9 @@ public class MainActivity extends AppCompatActivity {
             graph.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
 //            graph.getViewport().setDrawBorder(true);
 //            graph.getGridLabelRenderer().setHighlightZeroLines(true);
-//            graph.getViewport().setMinX(1000*earliestTimeSinceEpocSeconds);
-//            graph.getViewport().setMaxX(1000*latestTimeSinceEpocSeconds);
-//            graph.getViewport().setXAxisBoundsManual(true);
+            graph.getViewport().setMinX(1000*earliestTimeSinceEpocSeconds);
+            graph.getViewport().setMaxX(1000*latestTimeSinceEpocSeconds);
+            graph.getViewport().setXAxisBoundsManual(true);
 //            graph.getViewport().setMinY(minY-yPadding);
 //            graph.getViewport().setMaxY(maxY+yPadding);
 //            graph.getViewport().setYAxisBoundsManual(true);
@@ -174,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean addDataPoint(MenuItem item){
         View view = this.findViewById(R.id.mainFragmentLayout);
+//        readAllFromDB(view);
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
         builder.setTitle(R.string.add_score_title);
@@ -206,11 +229,11 @@ public class MainActivity extends AppCompatActivity {
                     Double.parseDouble(distanceText.getText().toString()),
                     dateText.getText().toString());
             writeUserToDB(view,user);
-            System.out.println("Adding: " + distanceText.getText() + "m " + timeText.getText() + "s " + dateText.getText() + " to database");
-            if(user.getUserData().size()<2){
-                Toast.makeText(view.getContext(),
-                        "At least 2 data points are required to scale readings.",Toast.LENGTH_LONG).show();
-            }
+            // This can't work because user would have to be mutable which isn't allowed
+//            if(user.getUserData().size()<3){
+//                Toast.makeText(view.getContext(),
+//                        "At least 3 data points are required to scale readings.",Toast.LENGTH_LONG).show();
+//            }
         });
         builder.setNegativeButton(R.string.Cancel, (dialog,i) -> dialog.cancel());
         builder.show();
